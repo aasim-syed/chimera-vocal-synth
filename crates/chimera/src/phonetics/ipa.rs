@@ -9,6 +9,17 @@ const VOWEL_CHARS: &str = "iyɨʉɯuɪʏʊeøɘɵɤoəɛœɜɞʌɔæɐaɶɑɒɝ�
 const MULTI: [&str; 10] = ["tʃ", "dʒ", "ts", "dz", "pf", "aɪ", "aʊ", "ɔɪ", "eɪ", "oʊ"];
 const ALIASES: [(&str, &str); 9] = [("t͡ʃ", "tʃ"), ("d͡ʒ", "dʒ"), ("t͡s", "ts"), ("d͡z", "dz"), ("ɡ", "g"), ("ʧ", "tʃ"), ("ʤ", "dʒ"), ("r̥", "r"), ("ɐ̯", "ɐ")];
 
+/// IPA the engine has no gesture for, rewritten to the nearest sound it has, so a language whose
+/// inventory is wider than the engine's still comes out as speech and not as dropped sounds.
+/// Longest keys first. Applied after tie bars are gone.
+const NEAREST: &[(&str, &str)] = &[
+    ("tɕ", "tʃ"), ("dʑ", "dʒ"), ("ʈʂ", "tʃ"), ("ɖʐ", "dʒ"), ("ɕ", "ʃ"), ("ʑ", "ʒ"), ("ɧ", "ʃ"),
+    ("ɥ", "j"), ("ʍ", "w"), ("ɓ", "b"), ("ɗ", "d"), ("ʄ", "ɟ"), ("ɠ", "g"), ("ʛ", "ɢ"), ("ʜ", "ħ"), ("ʢ", "ʕ"), ("ʡ", "ʔ"),
+    ("ʘ", "p"), ("ǀ", "t"), ("ǃ", "c"), ("ǂ", "c"), ("ǁ", "ɬ"), ("ɺ", "ɾ"),
+];
+/// modifier letters that colour a sound (aspiration, palatalisation, labialisation, velarisation,
+/// pharyngealisation, ejective, tone letters) and that the engine does not model
+const MODIFIERS: &str = "ʰʱʲʷˠˤˀʼ˥˦˧˨˩˞";
 
 fn known() -> &'static HashSet<&'static str> {
     static K: OnceLock<HashSet<&'static str>> = OnceLock::new();
@@ -34,6 +45,10 @@ pub fn tokenize_ipa(input: &str) -> Vec<Segment> {
         s = s.replace(a, b);
     }
     s = s.replace(['\u{35C}', '\u{361}'], ""); // tie bars
+    for &(a, b) in NEAREST {
+        s = s.replace(a, b);
+    }
+    s.retain(|c| !MODIFIERS.contains(c));
     let s: Vec<char> = s.chars().collect();
     let mut out: Vec<Segment> = Vec::new();
     let mut stress = 0u8;

@@ -11,6 +11,11 @@ for tests and the `chimera` CLI.
   computer keyboard and Web MIDI.
 - **Speak**: English text (CMUdict with a letter-to-sound fallback) or IPA, turned into
   gestures and prosody, with the gestural score and a consonant chart on screen.
+- **Speak any language**: pick one of 140 eSpeak NG voices in the Say panel and type in its own
+  script. eSpeak turns the text into IPA (loaded on first use, 24 MB, never at start-up) and the
+  engine says it; IPA it has no gesture for becomes the nearest sound it has. Not modelled yet:
+  tone contours (Mandarin, Vietnamese), nasal vowels (French, Portuguese) and Japanese kanji.
+  eSpeak NG is GPL-3.0: see the licence note below.
 - **Sing**: piano roll with lyrics per note; consonants land before the beat.
 - **Beatbox**: pads and a step sequencer, every drum an articulatory gesture.
 - **Bestiary**: songbird (two-voice syrinx), seal, alligator and elephant.
@@ -57,6 +62,10 @@ bun tools/spectrogram.ts in.wav out.png
 Agents: see [AGENTS.md](AGENTS.md).
 
 ## License
+
+CHIMERA is MIT. The language picker loads `@echogarden/espeak-ng-emscripten` (eSpeak NG, GPL-3.0)
+in the browser; shipping a build that includes it means distributing GPL-3.0 code beside the MIT
+code.
 
 [MIT](LICENSE). Bundled third-party files keep their own licenses: the CMU Pronouncing
 Dictionary ([public/data/CMUDICT-LICENSE.txt](public/data/CMUDICT-LICENSE.txt)) and the fonts

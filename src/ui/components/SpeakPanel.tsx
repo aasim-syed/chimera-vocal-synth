@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store.ts";
+import { languages } from "../lang.ts";
 import { speakText, speakPhrases, stopSpeaking, onPlan, currentPlan, spokenWordNow } from "../speech.ts";
 import { mouthWords } from "../mouthWords.ts";
 import { tokenizeIpa } from "../../wasm/engine.ts";
@@ -119,6 +120,8 @@ export function SpeakRight() {
   const start = useStore((s) => s.start);
   const [text, setText] = useState(EXAMPLES[0]);
   const [ipa, setIpa] = useState(false);
+  const [lang, setLang] = useState("en");
+  const [langErr, setLangErr] = useState("");
   const [rate, setRate] = useState(1);
   const [busy, setBusy] = useState(false);
   const [trans, setTrans] = useState(currentPlan()?.transcription ?? "");
@@ -129,7 +132,9 @@ export function SpeakRight() {
     setBusy(true);
     try {
       await start();
-      await speakText(text, { ipa, body, rate, f0 });
+      await speakText(text, { ipa, body, rate, f0, lang });
+    } catch (e) {
+      setLangErr(`${e instanceof Error ? e.message : e}`);
     } finally {
       setBusy(false);
     }
@@ -141,7 +146,21 @@ export function SpeakRight() {
 
   return (
     <div className="right right-speak">
-      <Screen className="s-say" title="Say" sub="Text to speech" tools={<Toggle label="Text is IPA" checked={ipa} onChange={setIpa} />}>
+      <Screen className="s-say" title="Say" sub="Text to speech" tools={
+          <>
+            <label className="lang-pick">
+              Language
+              <select value={lang} onChange={(e) => { setLang(e.target.value); setLangErr(""); }} aria-label="Language of the text">
+                {languages.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Toggle label="Text is IPA" checked={ipa} onChange={setIpa} />
+          </>
+        }>
         <div className="say">
           <div className="say-row">
             <textarea
@@ -167,7 +186,7 @@ export function SpeakRight() {
           </div>
           <div className="say-row">
             <p className="transcription" aria-live="polite">
-              {trans ? `/${trans}/` : "The transcription appears here."}
+              {langErr || (trans ? `/${trans}/` : "The transcription appears here.")}
             </p>
             <div className="say-rate">
               <Slider label="Rate" value={rate} min={0.5} max={1.8} onChange={setRate} format={(v) => `${v.toFixed(2)}×`} />

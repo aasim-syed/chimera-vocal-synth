@@ -5,6 +5,7 @@ import { tokenizeIpa } from "../wasm/engine.ts";
 import { planPhrases, type Plan, type Segment } from "../wasm/engine.ts";
 import { engine } from "../audio/AudioEngine.ts";
 import type { Gesture } from "../wasm/types.ts";
+import { textToIpa } from "./lang.ts";
 import { wordSpans, type WordSpan } from "./words.ts";
 
 export const g2p = new EnglishG2P();
@@ -59,10 +60,11 @@ export function speakPhrases(phrases: { segments: Segment[]; intonation?: "state
   return current;
 }
 
-export async function speakText(text: string, o: { ipa: boolean; body: BodyMix; rate: number; f0: number }): Promise<SpokenPlan | null> {
+export async function speakText(text: string, o: { ipa: boolean; body: BodyMix; rate: number; f0: number; /** eSpeak language code; English (the default) uses the built-in dictionary */ lang?: string }): Promise<SpokenPlan | null> {
   if (!text.trim()) return null;
   let phrases: Phrase[];
   if (o.ipa) phrases = ipaToPhrases(text);
+  else if (o.lang && o.lang !== "en") phrases = ipaToPhrases(await textToIpa(text, o.lang));
   else {
     try {
       await g2p.load();
